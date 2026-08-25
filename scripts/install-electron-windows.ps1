@@ -43,7 +43,15 @@ if ($null -eq $property) {
   throw "No SHA-256 entry for $file in checksums.json"
 }
 $expected = ([string]$property.Value).ToLowerInvariant()
-$actual = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+$sha256 = [System.Security.Cryptography.SHA256]::Create()
+$stream = [System.IO.File]::OpenRead($zip)
+try {
+  $actual = ([System.BitConverter]::ToString($sha256.ComputeHash($stream))).Replace("-", "").ToLowerInvariant()
+}
+finally {
+  $stream.Dispose()
+  $sha256.Dispose()
+}
 Write-Host "[SnapFlow] Expected SHA256: $expected"
 Write-Host "[SnapFlow] Actual   SHA256: $actual"
 if ($expected -ne $actual) {

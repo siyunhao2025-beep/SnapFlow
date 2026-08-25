@@ -23,6 +23,7 @@ import type {
   AskRequest,
   Card,
   CompareRequest,
+  CloudSessionState,
   ProviderId
 } from '../shared/types'
 import {
@@ -83,7 +84,7 @@ function uiText(zh: string, en: string) {
   return store.getSettings().locale === 'en-US' ? en : zh
 }
 
-function cloudAuthState(state = cloudService.getCachedState()): AuthState {
+function cloudAuthState(state: CloudSessionState = cloudService.getCachedState()): AuthState {
   const user = state.connected && state.user ? {
     id: state.user.id,
     email: state.user.email,

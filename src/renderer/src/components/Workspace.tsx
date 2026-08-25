@@ -631,7 +631,7 @@ export function Workspace() {
               <div className="task-meta">
                 <button onClick={() => void toggleStar()}>{selected.starred ? text('★ 收藏', '★ Favorite') : text('☆ 收藏', '☆ Favorite')}</button>
                 <select value={selected.projectId || ''} onChange={(e) => void assignProject(e.target.value)}><option value="">{text('未归入项目', 'No project')}</option>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
-                {!selected.projectId && selected.metadata?.suggestedProjectId && <button className="suggest-project" onClick={() => void applySuggestedProject()}>{text(`建议：${String(selected.metadata?.suggestedProjectName || 'Project')}`, `Suggested: ${String(selected.metadata?.suggestedProjectName || 'Project')}`)}</button>}
+                {!selected.projectId && Boolean(selected.metadata?.suggestedProjectId) && <button className="suggest-project" onClick={() => void applySuggestedProject()}>{text(`建议：${String(selected.metadata?.suggestedProjectName || 'Project')}`, `Suggested: ${String(selected.metadata?.suggestedProjectName || 'Project')}`)}</button>}
                 <button className="danger-button" onClick={() => void deleteSelected()}>{text('删除', 'Delete')}</button>
               </div>
             </div>

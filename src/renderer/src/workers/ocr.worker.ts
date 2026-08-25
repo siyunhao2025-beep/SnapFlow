@@ -19,7 +19,7 @@ const palette = [
 ] as const
 
 function nearestColor(r: number, g: number, b: number) {
-  let best = palette[0].name
+  let best: (typeof palette)[number]['name'] = palette[0].name
   let bestDistance = Number.POSITIVE_INFINITY
   for (const item of palette) {
     const [pr, pg, pb] = item.rgb
