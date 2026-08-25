@@ -1,0 +1,117 @@
+{
+  "name": "snapflow",
+  "version": "2.0.0",
+  "description": "Screenshot-first personal AI workspace for Windows",
+  "main": "./out/main/index.js",
+  "author": "SnapFlow",
+  "license": "UNLICENSED",
+  "scripts": {
+    "electron:install": "install-electron --no",
+    "electron:ensure": "node scripts/ensure-electron.cjs",
+    "dev": "electron-vite dev",
+    "predev": "npm run electron:ensure",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "build": "npm run preflight && npm run typecheck && npm run test && electron-vite build",
+    "start": "electron-vite preview",
+    "prestart": "npm run electron:ensure",
+    "dist": "npm run build && electron-builder --win --x64",
+    "predist": "npm run electron:ensure",
+    "dist:win": "npm run dist",
+    "doctor": "node scripts/doctor.cjs",
+    "clean": "rimraf out release",
+    "verify:ipc": "node scripts/verify-ipc.cjs",
+    "preflight": "node scripts/preflight.cjs",
+    "verify": "npm run preflight && npm run verify:ipc && npm run typecheck && npm run test",
+    "website:build": "node scripts/build-website.cjs",
+    "release:validate": "node scripts/release-validate.cjs",
+    "verify:all": "npm run verify && npm run website:build && npm run release:validate"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "electron-updater": "6.6.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.1",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@vitejs/plugin-react": "5.1.1",
+    "electron": "43.4.1",
+    "electron-builder": "26.15.3",
+    "electron-vite": "5.0.0",
+    "rimraf": "6.0.1",
+    "tsx": "4.20.6",
+    "typescript": "5.9.3",
+    "vite": "7.2.6"
+  },
+  "build": {
+    "appId": "ai.snapflow.desktop",
+    "productName": "SnapFlow",
+    "asar": true,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/skills",
+        "to": "skills"
+      },
+      {
+        "from": "resources/demo-billing.json",
+        "to": "demo-billing.json"
+      },
+      {
+        "from": "resources/skill-marketplace.json",
+        "to": "skill-marketplace.json"
+      },
+      {
+        "from": "scripts/windows-ocr.ps1",
+        "to": "windows-ocr.ps1"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "artifactName": "SnapFlow-Setup-${version}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SnapFlow",
+      "deleteAppDataOnUninstall": false
+    },
+    "portable": {
+      "artifactName": "SnapFlow-Portable-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://cdn.jiege.app/update"
+      }
+    ]
+  },
+  "engines": {
+    "node": ">=22.12 <25"
+  },
+  "packageManager": "npm@11"
+}

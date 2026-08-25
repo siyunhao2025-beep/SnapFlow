@@ -1,0 +1,9 @@
+{
+  "enabledByDefault": true,
+  "packages": [100, 500, 1000],
+  "codes": {
+    "SNAPFLOW100": 100,
+    "WELCOME50": 50,
+    "HELLO20": 20
+  }
+}

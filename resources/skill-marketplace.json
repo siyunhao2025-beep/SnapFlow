@@ -1,0 +1,20 @@
+{
+  "skills": [
+    {
+      "id": "literature-review",
+      "name": "Literature Review",
+      "description": "Structure evidence, gaps, methods and citation claims from screenshots of papers.",
+      "version": "1.0.0",
+      "author": "SnapFlow",
+      "bundledContent": "---\nid: literature-review\nname: Literature Review\ndescription: Evidence-oriented literature review from papers and figures\nsupportedIntent: paper, scientific_figure, document\npreferredModels: auto\nactions: 归纳证据, 对比文献, 识别研究缺口\nversion: 1.0.0\nauthor: SnapFlow\n---\nRead the supplied material as literature evidence. Separate observed results from authors' interpretation, identify methods, limitations, disagreements, and research gaps. Never fabricate citations or details not visible in the supplied material."
+    },
+    {
+      "id": "ui-troubleshooter",
+      "name": "UI Troubleshooter",
+      "description": "Explain software interfaces and provide safe, stepwise troubleshooting.",
+      "version": "1.0.0",
+      "author": "SnapFlow",
+      "bundledContent": "---\nid: ui-troubleshooter\nname: UI Troubleshooter\ndescription: Explain software UI and troubleshoot visible problems\nsupportedIntent: software_ui, programming_error, general\npreferredModels: auto\nactions: 解释界面, 排查问题, 下一步怎么做\nversion: 1.0.0\nauthor: SnapFlow\n---\nInspect only what is visible in the screenshot and context. Explain controls, likely state, and the smallest reversible troubleshooting step first. Distinguish observation from inference."
+    }
+  ]
+}

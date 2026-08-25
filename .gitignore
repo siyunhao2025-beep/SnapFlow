@@ -1,0 +1,12 @@
+node_modules/
+out/
+release/
+dist/
+.test-build/
+tsconfig.test-run.json
+.env
+*.log
+.DS_Store
+# Reference billing server runtime ledger (never commit purchase/account data)
+billing-server/ledger.json
+billing-server/ledger.json.*

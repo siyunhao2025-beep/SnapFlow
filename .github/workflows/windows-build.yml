@@ -1,0 +1,62 @@
+name: Build SnapFlow Windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        shell: pwsh
+        run: |
+          if (Test-Path package-lock.json) { npm ci } else { npm install }
+          npm run electron:ensure
+
+      - name: TypeScript and unit tests
+        shell: pwsh
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Build Installer and Portable
+        run: npm run dist:win
+
+      - name: Verify EXE files
+        id: artifacts
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          $setup = "release/SnapFlow-Setup-$version.exe"
+          $portable = "release/SnapFlow-Portable-$version.exe"
+          if (!(Test-Path $setup)) { throw "Missing $setup" }
+          if (!(Test-Path $portable)) { throw "Missing $portable" }
+          Get-Item $setup, $portable | Format-Table FullName, Length
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Smoke-test packaged EXE
+        shell: pwsh
+        run: .\scripts\smoke-windows.ps1
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: SnapFlow-Windows-v${{ steps.artifacts.outputs.version }}
+          path: |
+            release/SnapFlow-Setup-*.exe
+            release/SnapFlow-Portable-*.exe
+            release/win-unpacked/**
+          if-no-files-found: error

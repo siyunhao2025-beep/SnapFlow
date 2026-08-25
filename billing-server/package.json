@@ -1,0 +1,15 @@
+{
+  "name": "snapflow-billing-server",
+  "version": "1.0.6",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch server.mjs",
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "stripe": "22.5.0"
+  }
+}
