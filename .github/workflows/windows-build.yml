@@ -28,12 +28,16 @@ jobs:
       - name: Install dependencies
         shell: pwsh
         run: |
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
           if (Test-Path package-lock.json) { npm ci } else { npm install }
           npm run electron:ensure
 
       - name: TypeScript and unit tests
         shell: pwsh
         run: |
+          $ErrorActionPreference = "Stop"
+          $PSNativeCommandUseErrorActionPreference = $true
           npm run typecheck
           npm test
 
