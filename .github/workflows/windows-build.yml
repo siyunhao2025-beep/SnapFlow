@@ -3,6 +3,8 @@ name: Build SnapFlow Windows
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -45,6 +47,10 @@ jobs:
           if (!(Test-Path $setup)) { throw "Missing $setup" }
           if (!(Test-Path $portable)) { throw "Missing $portable" }
           Get-Item $setup, $portable | Format-Table FullName, Length
+          Get-FileHash $setup, $portable -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $([System.IO.Path]::GetFileName($_.Path))" } |
+            Set-Content -Encoding ascii "release/SHA256SUMS.txt"
+          Get-Content "release/SHA256SUMS.txt"
           "version=$version" >> $env:GITHUB_OUTPUT
 
       - name: Smoke-test packaged EXE
@@ -58,5 +64,6 @@ jobs:
           path: |
             release/SnapFlow-Setup-*.exe
             release/SnapFlow-Portable-*.exe
+            release/SHA256SUMS.txt
             release/win-unpacked/**
           if-no-files-found: error
