@@ -146,11 +146,34 @@ function threadContext(card: Card) {
     : `\n\n【Screenshot Thread 上下文】\n${priorText}\n\n请判断当前截图是否延续上一问题；若不是，不要强行关联。`
 }
 
+function actionInstruction(action: string, english: boolean) {
+  const normalized = action.trim().toLowerCase()
+  if (normalized === '提取文字' || normalized === 'extract text' || normalized === 'ocr') {
+    return english
+      ? 'Transcribe the readable text only. Preserve line breaks, punctuation, equations, numbers and units as faithfully as possible. Do not explain, summarize, translate or add commentary. If a character cannot be read, mark only that character or short span as [unclear].'
+      : '只提取并转写画面中可读的原文。尽量保留换行、标点、公式、数字和单位；不要解释、不要总结、不要翻译、不要添加任何点评。确实无法辨认的字符或很短片段仅标记为[无法辨认]。'
+  }
+  if (normalized === '翻译' || normalized === 'translate' || normalized === 'translation') {
+    return english
+      ? 'Translate all readable source text into English unless the user explicitly requested another target language. Preserve equations, numbers, units, names and paragraph structure. Return the translation directly without an explanatory preface.'
+      : '翻译画面中全部可读原文；若用户没有指定目标语言，默认译成中文。保留公式、数字、单位、专有名词和段落层级。直接给出译文，不要先解释截图内容，也不要把“翻译”误做成总结。'
+  }
+  if (normalized === '解释' || normalized === 'explain') {
+    return english
+      ? 'Explain what the screenshot means and answer the likely user question directly. Focus on the visible content and give concrete next steps when applicable.'
+      : '直接解释截图内容的含义，并回答用户最可能关心的问题；以画面中的可见信息为依据，需要操作时给出明确下一步。'
+  }
+  return english
+    ? 'Solve the requested action directly. Ground the answer in visible evidence from the screenshot. Clearly mark anything that cannot be confirmed and do not invent details.'
+    : '直接完成这个动作。以截图中的可见证据为依据；无法从截图直接确认的内容要明确说明，不要臆测。'
+}
+
 export function buildActionPrompt(card: Card, action: string, customPrompt?: string, skill?: SkillDefinition | null) {
   const english = store.getSettings().locale === 'en-US'
+  const instruction = actionInstruction(action, english)
   const base = english
-    ? `You are handling a screenshot the user just captured in SnapFlow.\nApplication: ${card.appName || 'Unknown'}\nWindow: ${card.windowTitle || 'Unknown'}\nDetected type: ${card.type}\nAction: ${action}\n\nSolve the user's task directly. Ground the answer in visible evidence from the screenshot. Clearly mark anything that cannot be confirmed from the screenshot and do not invent details. Unless the user explicitly requests another language, answer in English.`
-    : `你正在 SnapFlow 中处理一张用户刚截取的屏幕内容。\n应用：${card.appName || '未知'}\n窗口：${card.windowTitle || '未知'}\n识别类型：${card.type}\n动作：${action}\n\n请直接解决用户问题。先依据截图中可见证据回答；无法从截图直接确认的内容要明确说明，不要臆测。除非用户明确要求其他语言，否则使用中文回答。`
+    ? `You are handling a screenshot the user just captured in SnapFlow.\nApplication: ${card.appName || 'Unknown'}\nWindow: ${card.windowTitle || 'Unknown'}\nDetected type: ${card.type}\nAction: ${action}\n\n${instruction}\nUnless the user explicitly requests another language, answer in English.`
+    : `你正在 SnapFlow 中处理一张用户刚截取的屏幕内容。\n应用：${card.appName || '未知'}\n窗口：${card.windowTitle || '未知'}\n识别类型：${card.type}\n动作：${action}\n\n${instruction}\n除非用户明确要求其他语言，否则使用中文回答。`
   const ocr = card.ocrText ? (english ? `\n\nOCR text (may contain recognition errors):\n${card.ocrText}` : `\n\nOCR 文字（可能含识别误差）：\n${card.ocrText}`) : ''
   const skillPrompt = skill ? `\n\n【Skill: ${skill.name}】\n${skill.systemPrompt}` : ''
   const extra = customPrompt?.trim() ? (english ? `\n\nUser note: ${customPrompt.trim()}` : `\n\n用户补充：${customPrompt.trim()}`) : ''
