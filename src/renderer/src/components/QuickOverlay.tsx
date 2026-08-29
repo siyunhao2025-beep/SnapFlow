@@ -4,6 +4,20 @@ import type { AiAnswer, BootstrapData, Card, ProviderId, RoutePreview } from '..
 import { shouldRequireVisionForCard } from '../../../shared/model-router'
 import { LanguageSwitch, useLanguage } from '../i18n'
 
+function isExtractTextAction(action: string) {
+  const value = action.trim().toLowerCase()
+  return value === '提取文字' || value === 'extract text' || value === 'ocr'
+}
+
+function isTranslateAction(action: string) {
+  const value = action.trim().toLowerCase()
+  return value === '翻译' || value === 'translate' || value === 'translation'
+}
+
+function scrollTo(ref: React.RefObject<HTMLElement | null>) {
+  window.setTimeout(() => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 20)
+}
+
 export function QuickOverlay({ cardId }: { cardId: string }) {
   const { text, actionLabel, intentLabel } = useLanguage()
   const [boot, setBoot] = useState<BootstrapData | null>(null)
@@ -18,6 +32,8 @@ export function QuickOverlay({ cardId }: { cardId: string }) {
   const [ephemeralAnswers, setEphemeralAnswers] = useState<AiAnswer[]>([])
   const [ocrOpen, setOcrOpen] = useState(false)
   const routeSequence = useRef(0)
+  const ocrRef = useRef<HTMLPreElement | null>(null)
+  const answersRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -69,14 +85,51 @@ export function QuickOverlay({ cardId }: { cardId: string }) {
     })
   }, [compareEligibleProviders])
 
+  async function refreshUntilOcr(maxWaitMs = 1800) {
+    const deadline = Date.now() + maxWaitMs
+    let latest = await window.snapflow.getCard(cardId)
+    if (latest) setCard(latest)
+    while (latest && !latest.ocrText?.trim() && Date.now() < deadline) {
+      await new Promise((resolve) => window.setTimeout(resolve, 250))
+      latest = await window.snapflow.getCard(cardId)
+      if (latest) setCard(latest)
+    }
+    return latest
+  }
+
   async function runAction(action: string) {
+    if (!card || !boot) return
     setBusy(action)
     setError('')
     try {
+      if (isExtractTextAction(action)) {
+        const latest = card.ocrText?.trim() ? card : await refreshUntilOcr()
+        if (latest?.ocrText?.trim()) {
+          setOcrOpen(true)
+          scrollTo(ocrRef)
+          return
+        }
+      }
+
+      let latest = card
+      if (isTranslateAction(action) && !latest.ocrText?.trim() && boot.settings.screenshot.localOcr) {
+        latest = (await refreshUntilOcr()) || latest
+      }
+
+      if (isTranslateAction(action) && !latest.ocrText?.trim() && provider !== 'auto' && !boot.settings.providers[provider]?.supportsVision) {
+        setError(text(
+          '翻译需要先读到文字，但当前 AI 不支持图片输入。请切换“Auto”或视觉模型，或确认“设置 → 截图 → 本地 OCR”已开启。',
+          'Translation needs readable text, but the selected AI cannot accept images. Switch to Auto/a vision model or enable local OCR in Settings → Screenshot.'
+        ))
+        return
+      }
+
       const result = await window.snapflow.askCard({ cardId, action, provider })
       setCard(result.card)
       if (!result.persisted && result.answer) setEphemeralAnswers((current) => [...current, result.answer])
       if (result.route) setRoute(result.route)
+      if (!result.answer) setError(text('本次操作没有返回结果，请重试。', 'This action returned no result. Please try again.'))
+      else scrollTo(answersRef)
     } catch (e: any) {
       setError(e?.message || text('调用失败', 'Request failed'))
     } finally {
@@ -106,6 +159,7 @@ export function QuickOverlay({ cardId }: { cardId: string }) {
         ])
       }
       if (result.warning) setError(result.warning)
+      scrollTo(answersRef)
     } catch (e: any) {
       setError(e?.message || text('Compare 失败', 'Compare failed'))
     } finally {
@@ -171,11 +225,11 @@ export function QuickOverlay({ cardId }: { cardId: string }) {
           {card.tags.slice(0, 4).map((tag) => <span className="pill" key={tag}>#{tag}</span>)}
           {card.ocrText && <button className="pill pill-button" onClick={() => setOcrOpen((v) => !v)}>{ocrOpen ? text('收起 OCR', 'Hide OCR') : 'OCR'}</button>}
         </div>
-        {ocrOpen && card.ocrText && <pre className="quick-ocr">{card.ocrText}</pre>}
+        {ocrOpen && card.ocrText && <pre ref={ocrRef} className="quick-ocr">{card.ocrText}</pre>}
 
         <div className="quick-actions">
           {card.actions.slice(0, 5).map((action) => (
-            <button key={action} disabled={Boolean(busy)} onClick={() => void runAction(action)}>
+            <button key={action} title={actionLabel(action)} disabled={Boolean(busy)} onClick={() => void runAction(action)}>
               {busy === action ? text('处理中…', 'Working…') : actionLabel(action)}
             </button>
           ))}
@@ -214,7 +268,7 @@ export function QuickOverlay({ cardId }: { cardId: string }) {
         {error && <div className="error-banner">{error}</div>}
 
         {latest.length > 0 && (
-          <div className="quick-answers">
+          <div ref={answersRef} className="quick-answers">
             {latest.map((answer) => (
               <article key={answer.id} className={answer.action === 'AI Consensus' ? 'answer-card consensus' : 'answer-card'}>
                 <header>
