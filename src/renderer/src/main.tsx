@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react'
 import ReactDOM from 'react-dom/client'
 import type { AuthState } from '../../shared/types'
 import './styles.css'
+import './workbuddy-polish.css'
 import { CaptureOverlay } from './components/CaptureOverlay'
 import { LoginPage } from './components/LoginPage'
 import { QuickOverlay } from './components/QuickOverlay'
+import { UiPolish } from './components/UiPolish'
 import { Workspace } from './components/Workspace'
 import { LanguageProvider, useLanguage } from './i18n'
 
@@ -53,5 +55,5 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <AppErrorBoundary><LanguageProvider><Root /></LanguageProvider></AppErrorBoundary>
+  <AppErrorBoundary><LanguageProvider><UiPolish /><Root /></LanguageProvider></AppErrorBoundary>
 )
