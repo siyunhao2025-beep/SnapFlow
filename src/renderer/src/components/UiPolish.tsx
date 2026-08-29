@@ -4,6 +4,7 @@ const HIDDEN_SECTION_HEADINGS = [
   'skill marketplace',
   '技能市场',
   'learned workflow',
+  'workflow suggestion',
   '工作流建议',
   'developer / billing extension',
   '扩展功能',
