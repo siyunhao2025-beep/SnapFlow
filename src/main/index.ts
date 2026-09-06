@@ -239,14 +239,24 @@ function createMainWindow() {
         try {
           const expectedLogin = !(await effectiveAuthState()).authenticated
           const state = await mainWindow?.webContents.executeJavaScript(
-            `({
-              rendered: Boolean(document.getElementById('root')?.firstElementChild && document.body.textContent?.trim()),
-              loginVisible: Boolean(document.querySelector('.login-shell')),
-              fatalVisible: Boolean(document.querySelector('.fatal-renderer'))
-            })`,
+            `(async () => {
+              const deadline = Date.now() + 10_000;
+              let state;
+              do {
+                state = {
+                  rendered: Boolean(document.getElementById('root')?.firstElementChild && document.body.textContent?.trim()),
+                  loginVisible: Boolean(document.querySelector('.login-shell')),
+                  fatalVisible: Boolean(document.querySelector('.fatal-renderer')),
+                  loadingVisible: Boolean(document.querySelector('.workspace-loading'))
+                };
+                if (state.fatalVisible || state.loginVisible || (state.rendered && !state.loadingVisible)) break;
+                await new Promise((resolve) => setTimeout(resolve, 200));
+              } while (Date.now() < deadline);
+              return state;
+            })()`,
             true
-          ) as { rendered?: boolean; loginVisible?: boolean; fatalVisible?: boolean } | undefined
-          const rendered = Boolean(state?.rendered) && !state?.fatalVisible
+          ) as { rendered?: boolean; loginVisible?: boolean; fatalVisible?: boolean; loadingVisible?: boolean } | undefined
+          const rendered = Boolean(state?.rendered) && !state?.fatalVisible && !state?.loadingVisible
           const loginOk = !expectedLogin || Boolean(state?.loginVisible)
           logger.info('Packaged renderer smoke test', { rendered, expectedLogin, loginVisible: Boolean(state?.loginVisible) })
           app.exit(rendered && loginOk ? 0 : expectedLogin && !state?.loginVisible ? 5 : 2)
