@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Pool } from 'pg'
+import pg from 'pg'
+
+const { Pool } = pg
 
 const databaseUrl = process.env.DATABASE_URL || ''
 if (!databaseUrl) throw new Error('DATABASE_URL is required')

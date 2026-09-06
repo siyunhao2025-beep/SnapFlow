@@ -1,7 +1,9 @@
 import http from 'node:http'
 import crypto from 'node:crypto'
-import { Pool } from 'pg'
+import pg from 'pg'
 import { createAdminRouter } from './admin.mjs'
+
+const { Pool } = pg
 
 const VERSION = '2.1.0'
 const PORT = Number(process.env.PORT || 8787)
