@@ -20,6 +20,9 @@ import { logger } from './logger'
 import { modelRegistry } from './models'
 import { listSkills } from './skills'
 
+declare const __JIEGE_CLOUD_API_URL__: string
+const bundledCloudApiUrl = String(typeof __JIEGE_CLOUD_API_URL__ === 'string' ? __JIEGE_CLOUD_API_URL__ : '').trim().replace(/\/+$/, '')
+
 export type StoredAuthAccount = {
   id: string
   email: string
@@ -126,7 +129,7 @@ function defaultSettings(): AppSettings {
     marketplaceEnabled: true,
     marketplaceIndexUrl: '',
     workflowRules: [],
-    cloud: { enabled: false, baseUrl: '', useCloudAuth: false, syncCredits: true, syncCards: false },
+    cloud: { enabled: Boolean(bundledCloudApiUrl), baseUrl: bundledCloudApiUrl, useCloudAuth: false, syncCredits: true, syncCards: false },
     updates: { enabled: false, manifestUrl: '', channel: 'stable', autoDownload: false },
     deviceId: `device_${randomUUID().replace(/-/g, '').slice(0, 14)}`
   }
@@ -266,7 +269,11 @@ class SnapStore {
           locale: parsed.settings?.locale === 'en-US' ? 'en-US' : 'zh-CN',
           privacy: { ...defaults.settings.privacy, ...(parsed.settings?.privacy ?? {}), readRecentContext: false, sensitiveAppBlacklist: Array.isArray(parsed.settings?.privacy?.sensitiveAppBlacklist) ? parsed.settings!.privacy.sensitiveAppBlacklist.filter((x): x is string => typeof x === 'string').slice(0, 100) : defaults.settings.privacy.sensitiveAppBlacklist },
           screenshot: { ...defaults.settings.screenshot, ...(parsed.settings?.screenshot ?? {}), localOcrEngine: ['auto','windows','tesseract','off'].includes(String(parsed.settings?.screenshot?.localOcrEngine)) ? parsed.settings!.screenshot.localOcrEngine : defaults.settings.screenshot.localOcrEngine },
-          cloud: { ...defaults.settings.cloud, ...(parsed.settings?.cloud ?? {}) },
+          cloud: {
+            ...defaults.settings.cloud,
+            ...(parsed.settings?.cloud ?? {}),
+            baseUrl: String(parsed.settings?.cloud?.baseUrl || defaults.settings.cloud.baseUrl).trim().replace(/\/+$/, '')
+          },
           updates: { ...defaults.settings.updates, ...(parsed.settings?.updates ?? {}) },
           workflowRules: Array.isArray(parsed.settings?.workflowRules) ? parsed.settings!.workflowRules.slice(0, 100) : [],
           providers: Object.fromEntries(

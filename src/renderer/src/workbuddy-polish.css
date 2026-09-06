@@ -102,6 +102,13 @@
   padding: 10px 12px !important;
 }
 
+.right-tabs.five {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+  padding: 10px 8px !important;
+}
+
 .right-tabs button {
   min-width: 0;
   min-height: 36px;

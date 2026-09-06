@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { safeStorage } from 'electron'
-import type { AiUsage, CloudSessionState, ProviderId, ProviderModelOption } from '../shared/types'
+import type { AiUsage, CloudLiteraturePage, CloudSessionState, ProviderId, ProviderModelOption } from '../shared/types'
 import { getSnapFlowPaths } from './paths'
 import { store } from './store'
 import { ProviderError, classifyProviderError } from '../shared/errors'
@@ -124,6 +124,22 @@ export const cloudService = {
         provider: row.provider ? String(row.provider) : undefined, model: row.model ? String(row.model) : undefined,
         createdAt: String(row.createdAt || row.created_at || '')
       }))
+    }
+  },
+  async listLiterature(query = '', page = 1): Promise<CloudLiteraturePage> {
+    const q = encodeURIComponent(String(query || '').trim().slice(0, 300))
+    const safePage = Math.max(1, Math.floor(Number(page) || 1))
+    const body = await request(`/v1/public/literature?q=${q}&page=${safePage}&limit=30`)
+    return {
+      items: (Array.isArray(body.items) ? body.items : []).map((item: any) => ({
+        id: String(item.id || ''), title: String(item.title || ''), authors: Array.isArray(item.authors) ? item.authors.map(String) : [],
+        year: item.year == null ? null : Number(item.year), doi: item.doi ? String(item.doi) : undefined,
+        url: item.url ? String(item.url) : undefined, abstract: String(item.abstract || ''),
+        keywords: Array.isArray(item.keywords) ? item.keywords.map(String) : [], category: item.category ? String(item.category) : undefined,
+        categorySlug: item.categorySlug ? String(item.categorySlug) : undefined, source: item.source ? String(item.source) : undefined,
+        updatedAt: String(item.updatedAt || '')
+      })).filter((item: any) => item.id && item.title),
+      page: Number(body.page || safePage), limit: Number(body.limit || 30), total: Number(body.total || 0)
     }
   },
   async syncCards(cards: unknown[]) { if (!store.getSettings().cloud.syncCards || !getToken()) return { ok: false, skipped: true }; return request('/v1/cards/sync', { method: 'POST', body: JSON.stringify({ cards }) }) }

@@ -15,6 +15,7 @@ import type {
   SkillMarketplaceItem,
   WorkflowRecommendation,
   CloudSessionState,
+  CloudLiteraturePage,
   UpdateState,
   RoutePreview,
   UsageSummary
@@ -25,7 +26,7 @@ import { shouldRequireVisionForCard } from '../../../shared/model-router'
 import { LanguageSwitch, useLanguage } from '../i18n'
 
 type LibraryView = 'timeline' | 'gallery' | 'favorites'
-type RightTab = 'ai' | 'credits' | 'settings' | 'about'
+type RightTab = 'ai' | 'literature' | 'credits' | 'settings' | 'about'
 
 function groupLabel(iso: string, zh: boolean) {
   const date = new Date(iso)
@@ -72,6 +73,9 @@ export function Workspace() {
   const [marketplace, setMarketplace] = useState<SkillMarketplaceItem[]>([])
   const [workflowSuggestions, setWorkflowSuggestions] = useState<WorkflowRecommendation[]>([])
   const [cloudStatus, setCloudStatus] = useState<CloudSessionState | null>(null)
+  const [cloudLiterature, setCloudLiterature] = useState<CloudLiteraturePage | null>(null)
+  const [literatureQuery, setLiteratureQuery] = useState('')
+  const [literatureBusy, setLiteratureBusy] = useState(false)
   const [updateState, setUpdateState] = useState<UpdateState | null>(null)
   const [hotkeyStatus, setHotkeyStatus] = useState<{ ok: boolean; hotkey: string; conflict: string } | null>(null)
   const [searchMode, setSearchMode] = useState<'lexical' | 'semantic'>('semantic')
@@ -553,6 +557,15 @@ export function Workspace() {
     }
   }
 
+  async function searchCloudLiterature(page = 1) {
+    if (!settings?.cloud.baseUrl) return
+    setLiteratureBusy(true)
+    setError('')
+    try { setCloudLiterature(await window.snapflow.listCloudLiterature(literatureQuery, page)) }
+    catch (e: any) { setError(e?.message || text('读取 Cloud 文献失败', 'Failed to load Cloud literature')) }
+    finally { setLiteratureBusy(false) }
+  }
+
   if (startupError) return <div className="workspace-loading startup-failed"><div><b>{text('SnapFlow 初始化失败', 'SnapFlow initialization failed')}</b><span>{startupError}</span><button onClick={() => void load()}>{text('重试', 'Retry')}</button></div></div>
   if (!boot || !settings || !credits || !usage) return <div className="workspace-loading">{text('正在启动 SnapFlow…', 'Starting SnapFlow…')}</div>
   if (!settings.onboardingComplete) {
@@ -673,7 +686,7 @@ export function Workspace() {
       </main>
 
       <aside className="right-sidebar">
-        <div className="right-tabs four"><button className={rightTab === 'ai' ? 'active' : ''} onClick={() => setRightTab('ai')}>{text('AI / 工具', 'AI / Tools')}</button><button className={rightTab === 'credits' ? 'active' : ''} onClick={() => setRightTab('credits')}>{text('积分', 'Credits')}</button><button className={rightTab === 'settings' ? 'active' : ''} onClick={() => setRightTab('settings')}>{text('设置', 'Settings')}</button><button className={rightTab === 'about' ? 'active' : ''} onClick={() => setRightTab('about')}>{text('关于', 'About')}</button></div>
+        <div className="right-tabs five"><button className={rightTab === 'ai' ? 'active' : ''} onClick={() => setRightTab('ai')}>{text('AI / 工具', 'AI / Tools')}</button><button className={rightTab === 'literature' ? 'active' : ''} onClick={() => { setRightTab('literature'); if (!cloudLiterature) void searchCloudLiterature() }}>{text('文献', 'Papers')}</button><button className={rightTab === 'credits' ? 'active' : ''} onClick={() => setRightTab('credits')}>{text('积分', 'Credits')}</button><button className={rightTab === 'settings' ? 'active' : ''} onClick={() => setRightTab('settings')}>{text('设置', 'Settings')}</button><button className={rightTab === 'about' ? 'active' : ''} onClick={() => setRightTab('about')}>{text('关于', 'About')}</button></div>
 
         {rightTab === 'ai' && <div className="right-scroll">
           {boot.demoMode && <div className="demo-banner"><b>Demo Mode</b><span>{text('尚未连接真实 AI。进入“设置 → AI Providers”，填写 API Key，保存并点击“测试连接”。', 'No real AI is connected yet. Open Settings → AI Providers, save an API key, then click Test Connection.')}</span></div>}
@@ -684,6 +697,10 @@ export function Workspace() {
           {settings.learnedWorkflowEnabled && workflowSuggestions.slice(0, 3).map((rec) => <section className="side-card workflow-card" key={rec.signature}><header><b>{text('工作流建议', 'Workflow suggestion')}</b><span>{rec.count}×</span></header><p>{intentLabel(rec.intent)} → {rec.provider} → {actionLabel(rec.action)}</p><div className="inline-actions"><button disabled={!selected || Boolean(busy)} onClick={() => { setProvider(rec.provider); void runAction(rec.action) }}>{text('执行', 'Run')}</button><button className="ghost" onClick={() => void saveWorkflow(rec)}>{text('保存快捷动作', 'Save shortcut')}</button></div></section>)}
           {settings.workflowRules.length > 0 && <section className="side-card"><header><b>{text('已保存工作流', 'Saved workflows')}</b><span>{settings.workflowRules.length}</span></header>{settings.workflowRules.filter((rule) => rule.enabled).map((rule) => <button className="skill-button" key={rule.id} disabled={!selected || Boolean(busy)} onClick={() => { setProvider(rule.provider); void runAction(rule.action, rule.skillId) }}><span>↯</span><div><b>{rule.name}</b><small>{intentLabel(rule.intent)} · {rule.provider}</small></div></button>)}</section>}
           {settings.marketplaceEnabled && <section className="side-card"><header><b>{text('Skill Marketplace', 'Skill Marketplace')}</b><span>{marketplace.length}</span></header>{marketplace.slice(0, 6).map((item) => <div className="marketplace-row" key={item.id}><div><b>{item.name}</b><small>{item.description} · v{item.version}</small></div><button className={item.installed ? 'ghost' : ''} onClick={() => void (item.installed ? uninstallMarketplace(item.id) : installMarketplace(item.id))}>{item.installed ? text('卸载', 'Uninstall') : text('安装', 'Install')}</button></div>)}</section>}
+        </div>}
+
+        {rightTab === 'literature' && <div className="right-scroll">
+          <section className="side-card cloud-literature"><header><b>{text('截哥 Cloud 文献库', 'JieGe Cloud Literature')}</b><span>{cloudLiterature?.total ?? 0}</span></header><p>{text('管理员发布后的文献会同步出现在这里。草稿与已下架内容不会返回桌面端。', 'Administrator-published literature appears here. Drafts and withdrawn items are never returned to the desktop.')}</p><div className="redeem-row"><input value={literatureQuery} onChange={(e) => setLiteratureQuery(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && void searchCloudLiterature()} placeholder={text('标题、作者或摘要', 'Title, author or abstract')}/><button disabled={literatureBusy || !settings.cloud.baseUrl} onClick={() => void searchCloudLiterature()}>{literatureBusy ? text('读取中', 'Loading') : text('搜索', 'Search')}</button></div>{!settings.cloud.baseUrl && <div className="test-status">{text('请先在“设置”中填写 Cloud URL。', 'Set the Cloud URL in Settings first.')}</div>}{cloudLiterature?.items.map((item) => <article className="literature-row" key={item.id}><div><b>{item.title}</b><span>{item.authors.join(', ')}{item.year ? ` · ${item.year}` : ''}</span><small>{item.category || text('未分类', 'Uncategorized')} {item.doi ? `· DOI ${item.doi}` : ''}</small></div>{item.url && <button className="ghost" onClick={() => void window.snapflow.openExternalUrl(item.url!)}>{text('原文', 'Source')}</button>}</article>)}{settings.cloud.baseUrl && cloudLiterature && cloudLiterature.items.length === 0 && <div className="empty-list">{text('没有匹配的已发布文献', 'No matching published literature')}</div>}{cloudLiterature && cloudLiterature.total > cloudLiterature.page * cloudLiterature.limit && <button className="ghost full" disabled={literatureBusy} onClick={() => void searchCloudLiterature(cloudLiterature.page + 1)}>{text('下一页', 'Next page')}</button>}</section>
         </div>}
 
         {rightTab === 'credits' && <div className="right-scroll">

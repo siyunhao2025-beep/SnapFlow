@@ -28,7 +28,8 @@ import type {
   RoutePreview,
   UsageSummary,
   VisualDescriptor,
-  CloudCreditState
+  CloudCreditState,
+  CloudLiteraturePage
 } from '../shared/types'
 
 type CreditsPayload = { credits: CreditState; usageSummary: UsageSummary }
@@ -88,6 +89,7 @@ const api = {
   logoutCloud: () => ipcRenderer.invoke('cloud:logout') as Promise<CloudSessionState>,
   checkoutCloudCredits: (amount: number) => ipcRenderer.invoke('cloud:checkout', amount) as Promise<{ url?: string; sessionId?: string }>,
   getCloudCredits: () => ipcRenderer.invoke('cloud:credits') as Promise<CloudCreditState>,
+  listCloudLiterature: (query = '', page = 1) => ipcRenderer.invoke('cloud:literature', query, page) as Promise<CloudLiteraturePage>,
   syncCloudCards: () => ipcRenderer.invoke('cloud:sync-cards'),
   getUpdateStatus: () => ipcRenderer.invoke('update:status') as Promise<UpdateState>,
   checkForUpdates: () => ipcRenderer.invoke('update:check') as Promise<UpdateState>,
@@ -102,6 +104,7 @@ const api = {
   getAppInfo: () => ipcRenderer.invoke('app:info') as Promise<AppInfo>,
   openDataDirectory: () => ipcRenderer.invoke('app:open-data') as Promise<string>,
   openLogsDirectory: () => ipcRenderer.invoke('app:open-logs') as Promise<string>,
+  openExternalUrl: (url: string) => ipcRenderer.invoke('app:open-url', url) as Promise<boolean>,
   copyText: (text: string) => ipcRenderer.invoke('clipboard:copy-text', text) as Promise<boolean>,
   onAuthChanged: (callback: (state: AuthState) => void) => {
     const listener = (_event: Electron.IpcRendererEvent, state: AuthState) => callback(state)

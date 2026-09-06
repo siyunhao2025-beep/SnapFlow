@@ -14,6 +14,8 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    env:
+      JIEGE_CLOUD_API_URL: ${{ vars.JIEGE_CLOUD_API_URL }}
     permissions:
       contents: read
     steps:

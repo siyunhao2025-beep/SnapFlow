@@ -242,6 +242,10 @@ kbd { background: #202737; border: 1px solid #39445a; border-bottom-width: 2px; 
 .project-nav-row:hover > button:not(.nav-item) { opacity: 1; }
 .timeline-label { margin: 10px 7px 4px; color: #6f7b90; font-size: 9px; text-transform: uppercase; letter-spacing: .8px; }
 .right-tabs.four { grid-template-columns: repeat(4,1fr); }
+.right-tabs.five { grid-template-columns: repeat(5,minmax(0,1fr)); }
+.literature-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; padding: 10px 0; border-top: 1px solid #202838; align-items: start; }
+.literature-row b,.literature-row span,.literature-row small { display: block; }
+.literature-row span,.literature-row small { margin-top: 4px; color: var(--muted); font-size: 9px; }
 .danger-button { color: #ff9d9d; border-color: rgba(255,116,116,.28); }
 .image-removed { min-height: 160px; display: grid; place-items: center; color: var(--muted); background: #080b10; }
 .tag-editor { display: grid; grid-template-columns: minmax(0,180px) auto; gap: 6px; margin-top: 9px; }

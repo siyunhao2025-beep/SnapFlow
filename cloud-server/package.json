@@ -1,11 +1,14 @@
 {
   "name": "snapflow-cloud",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check server.mjs"
+    "migrate": "node migrate.mjs",
+    "check": "node --check server.mjs && node --check admin.mjs && node --check admin-core.mjs && node --check migrate.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:integration": "node --test tests/integration.test.mjs"
   },
   "dependencies": {
     "pg": "8.13.1"

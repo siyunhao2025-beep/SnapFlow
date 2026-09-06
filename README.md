@@ -133,9 +133,9 @@ Card 可保存 OCR、回答、Tag、Project、Thread、视觉描述、语义向�
 - Demo：明确标记 Local Simulation。
 - Cloud：服务端 Cloud Credits 是权威账本；AI 调用先扣费，Provider 失败时退款；Stripe Checkout/Webhook 只在 Cloud Server 上处理 Secret。
 
-### 13. SnapFlow Cloud
+### 13. 截哥 Cloud 与 `/admin/`
 
-`cloud-server/` 提供 PostgreSQL + JWT + Cloud Credits + AI Gateway + Provider model listing + Stripe Checkout/Webhook + 可选 Card metadata sync 的参考生产架构。请阅读 `docs/CLOUD_DEPLOYMENT.md`。
+`cloud-server/` 提供 PostgreSQL + JWT + Cloud Credits + AI Gateway + Provider model listing + Stripe Checkout/Webhook + Card metadata sync，并新增完整的文献、用户、订单、余额、充值、审计和备份 API。官网 `/admin/` 提供 Owner / Editor / Finance / Viewer 权限管理台；桌面版可直接查询已发布文献。数据库迁移、集成测试、Docker 与 GitHub Actions 部署流水线已包含。请阅读 `docs/CLOUD_DEPLOYMENT.md` 与 `docs/ADMIN_CONSOLE.md`。
 
 ### 14. 自动更新
 
@@ -143,7 +143,7 @@ Card 可保存 OCR、回答、Tag、Project、Thread、视觉描述、语义向�
 
 ### 15. 官网
 
-`snapflow-website/` 是单文件、自包含、移动优先官网，包含中英、Light/Dark、粒子 Hero、功能区、Before/After、开发者故事、场景、Windows 下载和 manifest 注入。`npm run website:build` 输出 `dist/site/`。
+`snapflow-website/` 是自包含、移动优先官网，包含中英、Light/Dark、粒子 Hero、功能区、Before/After、开发者故事、场景、Windows 下载和 manifest 注入；`admin/` 是 Cloud 管理台。`npm run website:build` 会将两者及 Cloud 连接配置一起输出到 `dist/site/`。
 
 ## 开发启动
 

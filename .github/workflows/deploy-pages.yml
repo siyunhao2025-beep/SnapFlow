@@ -33,6 +33,12 @@ jobs:
         with:
           enablement: true
 
+      - name: Connect website to JieGe Cloud
+        env:
+          JIEGE_CLOUD_API_URL: ${{ vars.JIEGE_CLOUD_API_URL }}
+        run: |
+          node -e "const fs=require('fs'); const url=String(process.env.JIEGE_CLOUD_API_URL||'').replace(/\/+$/,''); fs.writeFileSync('snapflow-website/config.js','window.JIEGE_CONFIG = Object.freeze({ cloudApiUrl: '+JSON.stringify(url)+' })\\n')"
+
       - name: Upload website
         uses: actions/upload-pages-artifact@v3
         with:

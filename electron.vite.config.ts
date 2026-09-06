@@ -4,6 +4,9 @@ import { resolve } from 'node:path'
 
 export default defineConfig({
   main: {
+    define: {
+      __JIEGE_CLOUD_API_URL__: JSON.stringify(process.env.JIEGE_CLOUD_API_URL || '')
+    },
     build: {
       rollupOptions: {
         input: resolve(__dirname, 'src/main/index.ts')

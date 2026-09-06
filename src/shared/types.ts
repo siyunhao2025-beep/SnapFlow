@@ -379,6 +379,28 @@ export interface CloudCreditState {
   entries: Array<{ id: string; delta: number; reason: string; provider?: string; model?: string; createdAt: string }>
 }
 
+export interface CloudLiteratureItem {
+  id: string
+  title: string
+  authors: string[]
+  year?: number | null
+  doi?: string
+  url?: string
+  abstract: string
+  keywords: string[]
+  category?: string
+  categorySlug?: string
+  source?: string
+  updatedAt: string
+}
+
+export interface CloudLiteraturePage {
+  items: CloudLiteratureItem[]
+  page: number
+  limit: number
+  total: number
+}
+
 export interface CloudSessionState {
   enabled: boolean
   connected: boolean

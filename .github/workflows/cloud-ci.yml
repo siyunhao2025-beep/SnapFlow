@@ -1,0 +1,66 @@
+name: JieGe Cloud CI
+
+on:
+  workflow_call:
+  pull_request:
+    paths:
+      - 'cloud-server/**'
+      - 'snapflow-website/admin/**'
+      - 'snapflow-website/config.js'
+      - 'src/main/cloud.ts'
+      - 'src/shared/types.ts'
+      - 'src/preload/index.ts'
+      - '.github/workflows/cloud-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'cloud-server/**'
+      - 'snapflow-website/admin/**'
+      - 'snapflow-website/config.js'
+      - 'src/main/cloud.ts'
+      - 'src/shared/types.ts'
+      - 'src/preload/index.ts'
+      - '.github/workflows/cloud-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  cloud-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: jiege_test
+          POSTGRES_USER: jiege
+          POSTGRES_PASSWORD: test-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U jiege"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    defaults:
+      run:
+        working-directory: cloud-server
+    env:
+      DATABASE_URL: postgres://jiege:test-password@127.0.0.1:5432/jiege_test
+      JWT_SECRET: ci-user-jwt-secret-with-at-least-32-bytes
+      ADMIN_JWT_SECRET: ci-admin-jwt-secret-with-at-least-32-bytes
+      ADMIN_BOOTSTRAP_TOKEN: ci-one-time-bootstrap-token
+      CORS_ORIGIN: https://siyunhao2025-beep.github.io
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: cloud-server/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run migrate
+      - run: RUN_INTEGRATION=1 npm run test:integration
+      - name: Build production container
+        working-directory: .
+        run: docker build -t jiege-cloud-ci ./cloud-server

@@ -1,0 +1,31 @@
+name: Deploy JieGe Cloud
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'cloud-server/**'
+
+concurrency:
+  group: jiege-cloud-production
+  cancel-in-progress: false
+
+jobs:
+  test:
+    uses: ./.github/workflows/cloud-ci.yml
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Trigger configured production deployment
+        env:
+          CLOUD_DEPLOY_WEBHOOK_URL: ${{ secrets.CLOUD_DEPLOY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$CLOUD_DEPLOY_WEBHOOK_URL" ]; then
+            echo "CLOUD_DEPLOY_WEBHOOK_URL is not configured; tests passed and deployment was safely skipped."
+            exit 0
+          fi
+          curl --fail-with-body --retry 3 --request POST "$CLOUD_DEPLOY_WEBHOOK_URL"

@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: jiege
+      POSTGRES_USER: jiege
+      POSTGRES_PASSWORD: local-development-only
+    volumes:
+      - jiege-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jiege"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  cloud:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 8787
+      DATABASE_URL: postgres://jiege:local-development-only@postgres:5432/jiege
+      JWT_SECRET: local-user-secret-change-before-production-123456
+      ADMIN_JWT_SECRET: local-admin-secret-change-before-production-1234
+      ADMIN_BOOTSTRAP_TOKEN: local-bootstrap-change-before-production
+      CORS_ORIGIN: http://localhost:8080
+    ports:
+      - "8787:8787"
+volumes:
+  jiege-postgres:

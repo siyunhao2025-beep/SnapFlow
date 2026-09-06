@@ -1266,6 +1266,7 @@ function registerIpc() {
   })
   protectedHandle('cloud:status', () => cloudService.status())
   protectedHandle('cloud:credits', () => cloudService.credits())
+  protectedHandle('cloud:literature', (_event, query: string, page: number) => cloudService.listLiterature(cleanText(query, '', 300), page))
   protectedHandle('cloud:register', async (_event, email: string, displayName: string, password: string) => cloudService.register(cleanText(email, '', 254), cleanText(displayName, '', 80), String(password || '')))
   protectedHandle('cloud:login', async (_event, email: string, password: string) => cloudService.login(cleanText(email, '', 254), String(password || '')))
   protectedHandle('cloud:logout', () => {
@@ -1370,6 +1371,12 @@ function registerIpc() {
   protectedHandle('app:info', () => appInfo())
   protectedHandle('app:open-data', async () => shell.openPath(getSnapFlowPaths().root))
   protectedHandle('app:open-logs', async () => shell.openPath(getSnapFlowPaths().logs))
+  protectedHandle('app:open-url', async (_event, value: string) => {
+    const url = new URL(cleanText(value, '', 2048))
+    if (url.protocol !== 'https:') throw new Error('Only HTTPS links may be opened')
+    await shell.openExternal(url.toString())
+    return true
+  })
 }
 
 if (!hasSingleInstanceLock) {
