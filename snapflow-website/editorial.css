@@ -312,6 +312,7 @@ h1 em {
 .hero-product picture,
 .hero-product img { display: block; width: 100%; }
 .hero-product img {
+  height: auto;
   border-radius: 8px;
   background: #090d15;
   aspect-ratio: 2048 / 1158;
@@ -499,6 +500,7 @@ section { padding: 120px 0 132px; }
 .showcase-visual picture,
 .showcase-visual img { display: block; width: 100%; }
 .showcase-visual img {
+  height: auto;
   border-radius: 7px;
   aspect-ratio: 2048 / 1158;
   object-fit: cover;
